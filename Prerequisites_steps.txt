@@ -1,0 +1,212 @@
+Data Ingestion 
+
+importing or loading data from sources into Hadoop system for storage and further analysis. It involves extracting data from source systems, transforming it if necessary, and loading it into a target system such as a database or data warehouse.
+
+Steps 1:uploading data to HDFS
+
+	hadoop fs -mkdir healthcare
+	hadoop fs -ls
+	hadoop fs -ls healthcare	
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Address/Address.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Claim/Claim.csv  	/user/cloudera/healthcare/
+	
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Contain/Contain.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Disease/Disease.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put 	/home/cloudera/Desktop/HealthcareTables/InsuranceCompany/InsuranceCompany.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put 	/home/cloudera/Desktop/HealthcareTables/InsurancePlan/InsurancePlan.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Keep/Keep.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Medicine/Medicine.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Patient/Patient.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Person/Person.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Pharmacy/Pharmacy.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put 	/home/cloudera/Desktop/HealthcareTables/Prescription/Prescription.csv  	/user/cloudera/healthcare/
+
+	hadoop fs -put /home/cloudera/Desktop/HealthcareTables/Treatment/Treatment.csv  	/user/cloudera/healthcare/
+
+
+Step 2: Verify all the files 
+
+	hadoop fs -ls healthcare
+
+ 
+Step 3: Create  internal table or check existing table of warehouse
+
+CREATE TABLE Address (
+  addressID INT,
+  address1 VARCHAR(200),
+  city VARCHAR(100),
+  state VARCHAR(20),
+  zip INT
+)
+row format delimited 
+fields terminated by  ',' 
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE Claim(
+   claimID BIGINT
+  ,balance BIGINT
+  ,uin     VARCHAR(22)
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE Contain(
+   prescriptionID BIGINT 
+  ,medicineID     INT
+  ,quantity       INT
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE Disease(
+   diseaseID   INT
+  ,diseaseName VARCHAR(100)
+  ,description VARCHAR(1000)
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE InsuranceCompany(
+   companyID   INT
+  ,companyName VARCHAR(100)
+  ,addressID   INT
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE InsurancePlan(
+   uin       VARCHAR(25) 
+  ,planName  VARCHAR(100)
+  ,companyID INT
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE Keep(
+   pharmacyID INT
+  ,medicineID INT 
+  ,quantity   INT 
+  ,discount   INT 
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE Medicine(
+   medicineID         INT
+  ,companyName        VARCHAR(101)
+  ,productName        VARCHAR(174)
+  ,description        VARCHAR(161)
+  ,substanceName      VARCHAR(255)
+  ,productType        INT
+  ,taxCriteria        VARCHAR(3)
+  ,hospitalExclusive  VARCHAR(1)
+  ,governmentDiscount VARCHAR(1)
+  ,taxImunity         VARCHAR(1)
+  ,maxPrice           float
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE Patient(
+   patientID INT
+  ,ssn       INT 
+  ,dob       DATE 
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+
+CREATE TABLE Person(
+   personID INT,
+   personName varchar(30), 
+   phoneNumber       INT,
+   gender char(10),
+   addressID varchar(200)
+)  row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+CREATE TABLE Pharmacy(
+   pharmacyID   INT
+  ,pharmacyName VARCHAR(33)
+  ,phone        BIGINT 
+  ,addressID    INT
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+
+
+CREATE TABLE Prescription(
+   prescriptionID BIGINT
+  ,pharmacyID     INT
+  ,treatmentID    INT 
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+;
+
+CREATE TABLE Treatment(
+   treatmentID INT
+  ,date        DATE 
+  ,patientID   INT 
+  ,diseaseID   INT 
+  ,claimID     BIGINT 
+) row format delimited 
+fields terminated by  ','
+TBLPROPERTIES ('transactional'='true', 'skip.header.line.count'='1');
+;
+
+Step 4: Load data or run pipeline from source to target (hive)
+
+load data inpath '/user/cloudera/healthcare/Address.csv' into table address;
+load data inpath '/user/cloudera/healthcare/Claim.csv' into table claim;
+load data inpath '/user/cloudera/healthcare/Contain.csv' into table contain;
+load data inpath '/user/cloudera/healthcare/Disease.csv' into table disease;
+load data inpath '/user/cloudera/healthcare/InsuranceCompany.csv' into table insurancecompany;
+load data inpath '/user/cloudera/healthcare/InsurancePlan.csv' into table insuranceplan;
+load data inpath '/user/cloudera/healthcare/Keep.csv' into table keep;
+load data inpath '/user/cloudera/healthcare/Medicine.csv' into table medicine;
+load data inpath '/user/cloudera/healthcare/Patient.csv' into table patient;
+load data inpath '/user/cloudera/healthcare/Person.csv' into table person;
+load data inpath '/user/cloudera/healthcare/Pharmacy.csv' into table pharmacy;
+load data inpath '/user/cloudera/healthcare/Prescription.csv' into table prescription;
+load data inpath '/user/cloudera/healthcare/Treatment.csv' into table treatment;
+
+
+Step 5: Verify the internal table data
+
+select * from address limit 5;
+select * from claim limit 5;
+select * from contain limit 5;
+select * from diseaselimit 5;
+select * from insurancecompany limit 5;
+select * from insuranceplan limit 5;
+select * from keep limit 5;
+select * from medicine limit 5;
+select * from patient limit 5;
+select * from person limit 5;
+select * from pharmacy limit 5;
+select * from prescription limit 5;
+select * from treatment limit 5;
+
+
+
+Step 6 : Run hive query for client problem 
+
+Step 7: Create external table for output data after analysis of client problem
+
+Step 8: Transfer the output table to the client DB (SQL) 
+
+Step 9 : Hive integration with BI tool (tableau or powerBI ) to create reports 
+
