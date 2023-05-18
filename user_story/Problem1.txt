@@ -1,0 +1,110 @@
+Problem Statement 1:Jimmy, from the healthcare department, has requested a report that shows how the number of treatments each age category of patients has gone through in the year 2022. The age category is as follows, Children (00-14 years), Youth (15-24 years), Adults (25-64 years), and Seniors (65 years and over).
+Assist Jimmy in generating the report. 
+
+CREATE EXTERNAL TABLE problem1_1 (
+  age_category STRING,
+  number_of_treatments INT
+)
+STORED AS TEXTFILE
+LOCATION '/user/hive/result_healthcare/problem1';
+
+INSERT INTO problem1_1
+SELECT age_category, COUNT(*) AS number_of_treatments
+FROM (
+  SELECT CASE 
+           WHEN patient_age BETWEEN 0 AND 14 THEN 'Children' 
+           WHEN patient_age BETWEEN 15 AND 24 THEN 'Youth' 
+           WHEN patient_age BETWEEN 25 AND 64 THEN 'Adults' 
+           ELSE 'Seniors' 
+         END AS age_category, COUNT(*) AS patient_count
+  FROM (
+    SELECT t.treatmentID, t.date AS treatment_date, t.patientID, t.diseaseID,      t.claimID, p.ssn, p.dob,
+    YEAR(CURRENT_DATE()) - YEAR(p.dob) AS patient_age 
+    FROM treatment t
+    JOIN patient p ON t.patientID = p.patientID
+    WHERE YEAR(t.date) = 2022
+  ) subquery
+  GROUP BY patient_age
+) final_query
+GROUP BY age_category;
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Problem Statement 2:  Jimmy, wants to know which disease is infecting people of which gender more often.Assist Jimmy with this purpose by 
+-- generating a report that shows for each disease the male-to-female ratio.Sort the data in a way that is helpful for Jimmy.
+
+CREATE EXTERNAL TABLE problem1_2 (
+  diseaseID INT,
+  diseaseName STRING,
+  male_count INT,
+  female_count INT,
+  male_to_female_ratio DOUBLE
+)
+STORED AS TEXTFILE
+LOCATION '/user/hive/result_healthcare/problem1';
+
+insert into problem1_2
+SELECT t.diseaseID, d.diseaseName,
+       SUM(CASE WHEN pe.gender = 'male' THEN 1 ELSE 0 END) AS male_count,
+       SUM(CASE WHEN pe.gender = 'female' THEN 1 ELSE 0 END) AS female_count,
+       (SUM(CASE WHEN pe.gender = 'male' THEN 1 ELSE 0 END) / 
+        SUM(CASE WHEN pe.gender = 'female' THEN 1 ELSE 0 END)) AS male_to_female_ratio
+FROM treatment t
+JOIN patient p ON t.patientID = p.patientID
+JOIN person pe ON pe.personID = p.patientID
+JOIN disease d ON t.diseaseID = d.diseaseID
+GROUP BY t.diseaseID, d.diseaseName
+ORDER BY male_to_female_ratio DESC;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Problem Statement 3: 
+Jacob, from insurance management, has noticed that insurance claims are not made for all the treatments. He also wants to figure out if the gender of the patient has any impact on the insurance claim. Assist Jacob in this situation by generating a report that finds for each gender the number of treatments, number of claims, and treatment-to-claim ratio. And notice if there is a significant difference between the treatment-to-claim ratio of male and female patients.
+
+
+select gender,count(treatmentID) as total_treatment,count(t.claimid) as total_claim ,count(treatmentID)/count(t.claimid) as ratio
+from treatment t left join claim c on t.claimID=c.claimID  join patient p on t.patientID=p.patientID join person pe on p.patientID=pe.personID 
+group by gender;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Problem Statement 4: The Healthcare department wants a report about the inventory of pharmacies. Generate a report on their behalf that shows how many units of medicine each pharmacy has in their inventory, the total maximum retail price of those medicines, and the total price of all the medicines after discount. 
+Note: discount field in keep signifies the percentage of discount on the maximum price.
+
+SELECT c.pharmacyID, c.pharmacyName, c.medicineID, c.quantity, c.discount, c.maxPrice, c.discount_price, c.total_max_price, 
+       c.quantity * c.discount_price AS total_discounted_price
+FROM (
+  SELECT p.pharmacyID, p.pharmacyName, k.medicineID, k.quantity, k.discount, m.maxPrice,
+         (m.maxPrice * (100 - k.discount) / 100) AS discount_price, 
+         k.quantity * m.maxPrice AS total_max_price
+  FROM pharmacy p JOIN keep k ON p.pharmacyID = k.pharmacyID JOIN medicine m ON k.medicineID = m.medicineID
+) c
+ORDER BY c.pharmacyID, c.medicineID;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Problem Statement 5: The healthcare department suspects that some pharmacies prescribe more medicines than others in a single prescription, for them, generate a report that finds for each pharmacy the maximum, minimum and average number of medicines prescribed in their prescriptions. 
+
+
+SELECT pharmacyName, MAX(quantity_count) AS max_val, MIN(quantity_count) AS min_val, AVG(quantity_count) AS average_val
+FROM (
+  SELECT pr.prescriptionID, ph.pharmacyName, COUNT(DISTINCT c.medicineID) AS quantity_count
+  FROM PHARMACY ph
+  JOIN PRESCRIPTION pr ON ph.pharmacyId = pr.pharmacyId
+  JOIN CONTAIN c ON c.prescriptionId = pr.prescriptionId
+  GROUP BY pr.prescriptionID, ph.pharmacyName
+) A
+GROUP BY pharmacyName;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
