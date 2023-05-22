@@ -29,6 +29,19 @@ FROM (
 GROUP BY age_category;
 
 
+CREATE TABLE problem1_1 (
+  age_category VARCHAR(50),
+  number_of_treatments INT
+);
+
+sqoop export \
+  --connect jdbc:mysql://localhost:3306/healthcare_result \
+  --username root \
+  --password cloudera \
+  --table problem1_1 \
+  --export-dir /user/hive/result_healthcare/problem1/000000_0 \
+  --input-fields-terminated-by '\0001';
+
 
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,6 +72,18 @@ JOIN person pe ON pe.personID = p.patientID
 JOIN disease d ON t.diseaseID = d.diseaseID
 GROUP BY t.diseaseID, d.diseaseName
 ORDER BY male_to_female_ratio DESC;
+
+create table problem1_2(
+diseaseID int, diseaseName varchar(50), male_count int, female_count int , male_to_female_ratio float );
+
+
+sqoop export \
+  --connect jdbc:mysql://localhost:3306/healthcare_result \
+  --username root \
+  --password cloudera \
+  --table problem1_2 \
+  --export-dir /user/hive/result_healthcare/problem1/000000_0_copy_1 \
+  --input-fields-terminated-by '\0001';
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
